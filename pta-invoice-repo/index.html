@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Argenziano School PTA Invoice Generator</title>
+<title>Argenziano School PTA \u2014 Invoice Generator</title>
 <!--
   jsPDF v2.5.1 from jsdelivr (serves the unmodified npm tarball).
   The integrity hash was computed locally against the npm tarball using:
@@ -971,6 +971,12 @@ function drawTotal(doc, cursor, totalCents) {
 }
 
 function drawPaymentInstructions(doc, cursor, seller, mode) {
+  // In vendor-bills-PTA mode the seller's info is already at the top of the
+  // invoice, so a separate Payment Instructions block is redundant. Skip it.
+  if (mode !== MODE_PTA_TO_CUSTOMER) {
+    return;
+  }
+
   // Whoever is the seller is the one being paid; their info is the remit-to.
   cursor.ensureSpace(160);
   doc.setFontSize(9);
