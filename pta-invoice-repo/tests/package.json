@@ -1,0 +1,12 @@
+{
+  "name": "pta-invoice-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end tests for the PTA invoice generator. Renders both invoice modes to PDF and inspects the output.",
+  "scripts": {
+    "test": "node test.js && node test-email.js"
+  },
+  "dependencies": {
+    "jspdf": "2.5.1"
+  }
+}

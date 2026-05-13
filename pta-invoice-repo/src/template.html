@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argenziano School PTA \u2014 Invoice Generator</title>
+<!--
+  jsPDF v2.5.1 from jsdelivr (serves the unmodified npm tarball).
+  The integrity hash was computed locally against the npm tarball using:
+    openssl dgst -sha384 -binary jspdf.umd.min.js | openssl base64 -A
+-->
+<script
+  src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"
+  integrity="sha384-__SRI_HASH__"
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"></script>
+<style>
+  :root {
+    --text: #222;
+    --muted: #666;
+    --border: #ddd;
+    --border-strong: #bbb;
+    --bg: #fafafa;
+    --card: #ffffff;
+    --accent: #1a1a1a;
+    --danger: #b00020;
+    --success: #1a7f37;
+    --warning: #8a6d00;
+    --soft: #f3f3f3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 24px 16px 80px;
+    line-height: 1.4;
+    font-size: 15px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .section-label {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mode-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: white;
+    font-size: 14px;
+  }
+  .mode-option:hover { background: #f7f7f7; }
+  .mode-option input[type="radio"] {
+    margin: 2px 0 0;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+  .mode-option-text { flex: 1; }
+  .mode-option-sub { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .mode-option.selected { border-color: var(--accent); background: #fafafa; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  input[type="text"], input[type="email"], input[type="date"], input[type="number"], input[type="tel"] {
+    width: 100%;
+    padding: 9px 11px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    outline: none;
+  }
+  input:focus { border-color: #888; }
+  input.invalid { border-color: var(--danger); }
+  .row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .row > div { flex: 1; min-width: 0; }
+  .row:last-child { margin-bottom: 0; }
+  @media (max-width: 560px) {
+    .row { flex-direction: column; gap: 12px; }
+  }
+  .line-item {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--soft);
+  }
+  .line-item-row { display: flex; gap: 10px; align-items: flex-start; }
+  .line-item-row > .grow { flex: 1; min-width: 0; }
+  .line-item-row > .amount { width: 130px; }
+  .line-item-row > .remove { width: 32px; padding-top: 22px; }
+  .ref-wrap { margin-top: 8px; }
+  @media (max-width: 560px) {
+    .line-item-row { flex-direction: column; }
+    .line-item-row > .amount { width: 100%; }
+    .line-item-row > .remove { width: auto; padding-top: 0; }
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 9px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: white;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { background: #f5f5f5; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  button.primary:hover { background: #000; }
+  button.primary:disabled { background: #999; border-color: #999; cursor: wait; }
+  button.outline-primary {
+    background: white;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  button.outline-primary:hover { background: #f5f5f5; }
+  button.outline-primary:disabled { color: #999; border-color: #999; cursor: wait; }
+  button.icon {
+    padding: 4px 8px;
+    color: var(--danger);
+    border-color: #e0c0c4;
+    background: white;
+    font-size: 13px;
+    line-height: 1;
+  }
+  button.icon:hover { background: #fbeef0; }
+  button.small { padding: 6px 10px; font-size: 13px; }
+  .total-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 18px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-top: 8px;
+  }
+  .total-label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .total-amount { font-size: 22px; font-weight: 600; }
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .status {
+    font-size: 13px;
+    color: var(--muted);
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 1.2em;
+  }
+  .status.error   { color: var(--danger); }
+  .status.success { color: var(--success); }
+  .status.warning { color: var(--warning); }
+  .status.error::before   { content: '\2717'; font-weight: bold; }
+  .status.success::before { content: '\2713'; font-weight: bold; }
+  .status.warning::before { content: '\26A0'; }
+  .restore-bar {
+    display: none;
+    background: #fff8dc;
+    border: 1px solid #e0d28a;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #5c4a00;
+    align-items: center;
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .restore-bar.show { display: flex; }
+  .ptaInfo-readonly {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .ptaInfo-readonly .ptaInfo-label {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  @media print {
+    .actions, .restore-bar, button { display: none !important; }
+    body { background: white; padding: 0; }
+    .card { border: none; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<main class="container">
+
+  <h1>Argenziano School PTA \u2014 Invoice Generator</h1>
+  <p class="subtitle">Choose who is billing whom; fill in the form; download a PDF invoice.</p>
+
+  <div class="restore-bar" id="restoreBar" role="region" aria-label="Restore unsaved work">
+    <span id="restoreText">Restore your unsaved work from a previous session?</span>
+    <span style="display:flex; gap:8px;">
+      <button type="button" class="small" id="restoreBtn">Restore</button>
+      <button type="button" class="small" id="discardRestoreBtn">Discard</button>
+    </span>
+  </div>
+
+  <form id="invoiceForm" novalidate>
+
+    <div class="card" role="radiogroup" aria-label="Invoice mode">
+      <div class="section-label">Mode</div>
+      <div class="mode-options">
+        <label class="mode-option selected" id="modeOptionA">
+          <input type="radio" name="mode" value="pta-to-customer" checked>
+          <span class="mode-option-text">
+            PTA is billing a customer
+            <span class="mode-option-sub">The PTA appears at the top of the invoice. You fill in the customer details.</span>
+          </span>
+        </label>
+        <label class="mode-option" id="modeOptionB">
+          <input type="radio" name="mode" value="vendor-to-pta">
+          <span class="mode-option-text">
+            A vendor is billing the PTA
+            <span class="mode-option-sub">The vendor fills in their own details. Use the resulting PDF as documentation for paying the vendor.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Invoice</div>
+      <div class="row">
+        <div>
+          <label for="invoiceDate">Invoice date</label>
+          <input type="date" id="invoiceDate" name="invoiceDate" required>
+        </div>
+        <div>
+          <label for="invoiceNumber">Invoice number</label>
+          <input type="text" id="invoiceNumber" name="invoiceNumber" inputmode="numeric" required>
+          <div class="hint" id="invoiceNumberHint">Auto-fills from date. You can override.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode A: bill-to (customer) card -->
+    <div class="card" id="billToCard">
+      <div class="section-label">Bill to (customer)</div>
+      <div class="row">
+        <div>
+          <label for="billName">Contact name</label>
+          <input type="text" id="billName" name="billName" autocomplete="name">
+        </div>
+        <div>
+          <label for="billOrg">Organization</label>
+          <input type="text" id="billOrg" name="billOrg" autocomplete="organization">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="billEmail">Email</label>
+          <input type="email" id="billEmail" name="billEmail" placeholder="name@example.com" autocomplete="email">
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode B: vendor info card -->
+    <div class="card" id="vendorInfoCard" style="display:none;">
+      <div class="section-label">Vendor information (the party being paid)</div>
+      <div class="row">
+        <div>
+          <label for="vendorOrg">Business name</label>
+          <input type="text" id="vendorOrg" name="vendorOrg" autocomplete="organization">
+        </div>
+        <div>
+          <label for="vendorContact">Contact name (optional)</label>
+          <input type="text" id="vendorContact" name="vendorContact" autocomplete="name">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="vendorAddr1">Street address</label>
+          <input type="text" id="vendorAddr1" name="vendorAddr1" autocomplete="address-line1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="vendorAddr2">City, State, ZIP</label>
+          <input type="text" id="vendorAddr2" name="vendorAddr2" autocomplete="address-level2">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="vendorEmail">Email (optional)</label>
+          <input type="email" id="vendorEmail" name="vendorEmail" placeholder="name@example.com" autocomplete="email">
+        </div>
+        <div>
+          <label for="vendorPhone">Phone (optional)</label>
+          <input type="tel" id="vendorPhone" name="vendorPhone" autocomplete="tel">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="vendorTaxId">Tax ID (EIN or SSN, optional)</label>
+          <input type="text" id="vendorTaxId" name="vendorTaxId" placeholder="XX-XXXXXXX" autocomplete="off">
+          <div class="hint">Required if total payments from the PTA to this vendor exceed $600 in a calendar year (1099 reporting).</div>
+        </div>
+      </div>
+      <div class="ptaInfo-readonly" aria-label="The bill goes to the Argenziano School PTA">
+        <div class="ptaInfo-label">Bill will be addressed to:</div>
+        <div>Argenziano School PTA</div>
+        <div>290 Washington Street, Somerville, MA 02143</div>
+        <div>EIN: 04-2781633</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Line items</div>
+      <div id="lineItems"></div>
+      <button type="button" class="small" id="addLineBtn">+ Add line item</button>
+      <div class="total-bar">
+        <span class="total-label">Total due</span>
+        <span class="total-amount" id="totalAmount">$0.00</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary" id="generateBtn">Generate PDF</button>
+      <button type="button" class="outline-primary" id="emailBtn">Email PDF</button>
+      <button type="button" id="resetBtn">Reset form</button>
+      <div class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+  </form>
+</main>
+
+<script>
+'use strict';
+
+// ============================================================
+// Constants
+// ============================================================
+const MODE_PTA_TO_CUSTOMER = 'pta-to-customer';
+const MODE_VENDOR_TO_PTA   = 'vendor-to-pta';
+
+const ORG = Object.freeze({
+  name: 'Argenziano School PTA',
+  address1: '290 Washington Street',
+  address2: 'Somerville, MA 02143',
+  ein: '04-2781633',
+});
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const PDF_COLORS = Object.freeze({
+  TEXT: [34, 34, 34],
+  BODY: [51, 51, 51],
+  MUTED: [102, 102, 102],
+  RULE_STRONG: [204, 204, 204],
+  RULE_LIGHT: [238, 238, 238],
+});
+
+const LAYOUT = Object.freeze({
+  LEFT: 54,
+  RIGHT: 558,
+  TOP_MARGIN: 54,
+  BOTTOM_LIMIT: 720,
+  MAX_DESC_WIDTH: 380,
+  LINE_HEIGHT_BODY: 14,
+  LINE_HEIGHT_DESC: 13,
+  LINE_HEIGHT_REF: 12,
+});
+
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const STORAGE_KEY = 'argenziano-pta-invoice-draft-v2';
+const AUTOSAVE_DEBOUNCE_MS = 750;
+const RESTORE_PROMPT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+// Inlined Noto Sans (Latin + Latin Extended-A merged), as base64 TTF.
+const EMBEDDED_FONT_BASE64 = '__FONT_BASE64__';
+
+// ============================================================
+// DOM refs
+// ============================================================
+const form           = document.getElementById('invoiceForm');
+const dateInput      = document.getElementById('invoiceDate');
+const numberInput    = document.getElementById('invoiceNumber');
+const numberHint     = document.getElementById('invoiceNumberHint');
+const billToCard     = document.getElementById('billToCard');
+const billNameInput  = document.getElementById('billName');
+const billOrgInput   = document.getElementById('billOrg');
+const billEmailInput = document.getElementById('billEmail');
+const vendorInfoCard = document.getElementById('vendorInfoCard');
+const vendorOrgInput     = document.getElementById('vendorOrg');
+const vendorContactInput = document.getElementById('vendorContact');
+const vendorAddr1Input   = document.getElementById('vendorAddr1');
+const vendorAddr2Input   = document.getElementById('vendorAddr2');
+const vendorEmailInput   = document.getElementById('vendorEmail');
+const vendorPhoneInput   = document.getElementById('vendorPhone');
+const vendorTaxIdInput   = document.getElementById('vendorTaxId');
+const lineItemsEl    = document.getElementById('lineItems');
+const totalEl        = document.getElementById('totalAmount');
+const statusEl       = document.getElementById('status');
+const addLineBtn     = document.getElementById('addLineBtn');
+const resetBtn       = document.getElementById('resetBtn');
+const generateBtn    = document.getElementById('generateBtn');
+const emailBtn       = document.getElementById('emailBtn');
+const restoreBar     = document.getElementById('restoreBar');
+const restoreBtn     = document.getElementById('restoreBtn');
+const discardRestoreBtn = document.getElementById('discardRestoreBtn');
+const modeOptionA    = document.getElementById('modeOptionA');
+const modeOptionB    = document.getElementById('modeOptionB');
+
+const modeBFields = [
+  vendorOrgInput, vendorContactInput, vendorAddr1Input, vendorAddr2Input,
+  vendorEmailInput, vendorPhoneInput, vendorTaxIdInput,
+];
+
+// ============================================================
+// Mode
+// ============================================================
+let currentMode = MODE_PTA_TO_CUSTOMER;
+
+function applyMode(mode) {
+  currentMode = mode;
+  const isA = (mode === MODE_PTA_TO_CUSTOMER);
+
+  billToCard.style.display     = isA ? '' : 'none';
+  vendorInfoCard.style.display = isA ? 'none' : '';
+
+  modeOptionA.classList.toggle('selected', isA);
+  modeOptionB.classList.toggle('selected', !isA);
+
+  if (isA) {
+    numberHint.textContent = 'Auto-fills from date. You can override.';
+    // Re-couple invoice number to date if it was never manually edited
+    if (!invoiceNumberManuallyEdited) syncInvoiceNumberFromDate();
+  } else {
+    numberHint.textContent = "Enter the vendor's invoice number (their own numbering).";
+  }
+
+  scheduleAutosave();
+}
+
+document.querySelectorAll('input[name="mode"]').forEach(function(r) {
+  r.addEventListener('change', function(e) { applyMode(e.target.value); });
+});
+
+// ============================================================
+// Date / invoice number helpers
+// ============================================================
+function todayLocalISO() {
+  const d = new Date();
+  return d.getFullYear() + '-'
+       + String(d.getMonth() + 1).padStart(2, '0') + '-'
+       + String(d.getDate()).padStart(2, '0');
+}
+
+function dateToInvoiceNumber(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return '';
+  const [y, m, d] = isoDate.split('-');
+  return m + d + y;
+}
+
+function formatDateLong(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return '';
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return MONTHS[m - 1] + ' ' + d + ', ' + y;
+}
+
+// ============================================================
+// Money
+// ============================================================
+function parseAmountToCents(value) {
+  if (value == null || value === '') return 0;
+  const cleaned = String(value).trim().replace(/[$,\s]/g, '');
+  if (cleaned === '') return 0;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.round(n * 100);
+}
+
+function formatCents(cents) {
+  return '$' + (cents / 100).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+// ============================================================
+// Status
+// ============================================================
+let statusTimer = null;
+function setStatus(level, msg) {
+  statusEl.className = 'status';
+  statusEl.textContent = '';
+  requestAnimationFrame(function() {
+    statusEl.className = 'status' + (level ? ' ' + level : '');
+    statusEl.textContent = msg || '';
+  });
+  clearTimeout(statusTimer);
+  if (msg && level === 'success') {
+    statusTimer = setTimeout(function() {
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+    }, 4000);
+  }
+}
+function showError(msg)   { setStatus('error', msg); }
+function showSuccess(msg) { setStatus('success', msg); }
+function clearStatus()    { setStatus('', ''); }
+
+// ============================================================
+// Unicode check
+// ============================================================
+function hasUnsupportedChars(s) {
+  return /[^\u0000-\u017F]/.test(String(s || ''));
+}
+
+// ============================================================
+// Form state: date <-> invoice-number coupling (Mode A only)
+// ============================================================
+let invoiceNumberManuallyEdited = false;
+
+function syncInvoiceNumberFromDate() {
+  numberInput.value = dateToInvoiceNumber(dateInput.value);
+}
+
+dateInput.addEventListener('input', function() {
+  if (currentMode === MODE_PTA_TO_CUSTOMER && !invoiceNumberManuallyEdited) {
+    syncInvoiceNumberFromDate();
+  }
+  scheduleAutosave();
+});
+numberInput.addEventListener('input', function() {
+  invoiceNumberManuallyEdited = true;
+  scheduleAutosave();
+});
+
+// ============================================================
+// Line items
+// ============================================================
+let lineItemSeq = 0;
+
+function makeLineItem(values) {
+  values = values || {};
+  const id = ++lineItemSeq;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'line-item';
+
+  const row = document.createElement('div');
+  row.className = 'line-item-row';
+  wrapper.appendChild(row);
+
+  const grow = document.createElement('div');
+  grow.className = 'grow';
+  row.appendChild(grow);
+
+  const descInput = appendLabeledInput(grow, {
+    id: 'li-desc-' + id, label: 'Description',
+    type: 'text', className: 'li-desc',
+    placeholder: '',
+    value: values.description || '',
+  });
+
+  const refWrap = document.createElement('div');
+  refWrap.className = 'ref-wrap';
+  grow.appendChild(refWrap);
+
+  const refInput = appendLabeledInput(refWrap, {
+    id: 'li-ref-' + id, label: 'Reference (optional sub-line)',
+    type: 'text', className: 'li-ref',
+    placeholder: '',
+    value: values.reference || '',
+  });
+
+  const amtCol = document.createElement('div');
+  amtCol.className = 'amount';
+  row.appendChild(amtCol);
+
+  const amtInput = appendLabeledInput(amtCol, {
+    id: 'li-amount-' + id, label: 'Amount',
+    type: 'number', className: 'li-amount', placeholder: '0.00',
+    value: (values.amountCents != null) ? (values.amountCents / 100).toFixed(2) : '',
+    step: '0.01', min: '0',
+  });
+
+  for (const input of [descInput, refInput, amtInput]) {
+    input.addEventListener('input', scheduleAutosave);
+  }
+  amtInput.addEventListener('input', updateTotal);
+
+  const remCol = document.createElement('div');
+  remCol.className = 'remove';
+  row.appendChild(remCol);
+
+  const remBtn = document.createElement('button');
+  remBtn.type = 'button';
+  remBtn.className = 'icon';
+  remBtn.setAttribute('aria-label', 'Remove this line item');
+  remBtn.textContent = '\u00D7';
+  remBtn.addEventListener('click', function() {
+    wrapper.remove();
+    if (lineItemsEl.children.length === 0) makeLineItem();
+    updateTotal();
+    scheduleAutosave();
+  });
+  remCol.appendChild(remBtn);
+
+  lineItemsEl.appendChild(wrapper);
+  updateTotal();
+  return { wrapper: wrapper, descInput: descInput };
+}
+
+function appendLabeledInput(parent, opts) {
+  const label = document.createElement('label');
+  label.htmlFor = opts.id;
+  label.textContent = opts.label;
+  parent.appendChild(label);
+
+  const input = document.createElement('input');
+  input.type = opts.type;
+  input.id = opts.id;
+  input.className = opts.className;
+  if (opts.placeholder) input.placeholder = opts.placeholder;
+  if (opts.value)       input.value = opts.value;
+  if (opts.step)        input.step = opts.step;
+  if (opts.min != null) input.min = opts.min;
+  parent.appendChild(input);
+  return input;
+}
+
+function readLineItems() {
+  return Array.from(lineItemsEl.querySelectorAll('.line-item')).map(function(el) {
+    return {
+      description: el.querySelector('.li-desc').value.trim(),
+      reference:   el.querySelector('.li-ref').value.trim(),
+      amountCents: parseAmountToCents(el.querySelector('.li-amount').value),
+    };
+  });
+}
+
+function calculateTotalCents(items) {
+  return items.reduce(function(sum, item) { return sum + item.amountCents; }, 0);
+}
+
+function updateTotal() {
+  totalEl.textContent = formatCents(calculateTotalCents(readLineItems()));
+}
+
+addLineBtn.addEventListener('click', function() {
+  const created = makeLineItem();
+  created.descInput.focus();
+  scheduleAutosave();
+});
+
+for (const input of [billNameInput, billOrgInput, billEmailInput].concat(modeBFields)) {
+  input.addEventListener('input', scheduleAutosave);
+}
+
+// ============================================================
+// Parties: derive seller/buyer for PDF from current mode + form state
+// ============================================================
+function readParties() {
+  if (currentMode === MODE_PTA_TO_CUSTOMER) {
+    return {
+      seller: {
+        org: ORG.name,
+        addr1: ORG.address1,
+        addr2: ORG.address2,
+        taxId: ORG.ein,
+      },
+      buyer: {
+        name:  billNameInput.value.trim(),
+        org:   billOrgInput.value.trim(),
+        email: billEmailInput.value.trim(),
+      },
+    };
+  } else {
+    return {
+      seller: {
+        org:     vendorOrgInput.value.trim(),
+        contact: vendorContactInput.value.trim(),
+        addr1:   vendorAddr1Input.value.trim(),
+        addr2:   vendorAddr2Input.value.trim(),
+        email:   vendorEmailInput.value.trim(),
+        phone:   vendorPhoneInput.value.trim(),
+        taxId:   vendorTaxIdInput.value.trim(),
+      },
+      buyer: {
+        org:   ORG.name,
+        addr1: ORG.address1,
+        addr2: ORG.address2,
+        taxId: ORG.ein,
+      },
+    };
+  }
+}
+
+// ============================================================
+// Validation (mode-aware)
+// ============================================================
+function validateForm() {
+  const errors = [];
+
+  if (!dateInput.value)           errors.push('Invoice date is required.');
+  if (!numberInput.value.trim())  errors.push('Invoice number is required.');
+
+  const parties = readParties();
+
+  if (currentMode === MODE_PTA_TO_CUSTOMER) {
+    if (!parties.buyer.name && !parties.buyer.org) {
+      errors.push('Enter a contact name or organization for the customer.');
+    }
+    if (parties.buyer.email && !EMAIL_RX.test(parties.buyer.email)) {
+      errors.push('Customer email address is not valid.');
+    }
+  } else {
+    if (!parties.seller.org) {
+      errors.push('Enter the vendor business name.');
+    }
+    if (!parties.seller.addr1) {
+      errors.push("Enter the vendor's street address (for check mailing).");
+    }
+    if (!parties.seller.addr2) {
+      errors.push("Enter the vendor's city, state, and ZIP.");
+    }
+    if (parties.seller.email && !EMAIL_RX.test(parties.seller.email)) {
+      errors.push('Vendor email address is not valid.');
+    }
+  }
+
+  const allItems = readLineItems();
+  const meaningful = allItems.filter(function(i) { return i.description || i.amountCents > 0; });
+  if (meaningful.length === 0) {
+    errors.push('Add at least one line item.');
+  } else {
+    if (meaningful.some(function(i) { return !i.description; }))    errors.push('Each line item needs a description.');
+    if (meaningful.some(function(i) { return i.amountCents <= 0; })) errors.push('Each line item needs an amount greater than zero.');
+  }
+
+  // Unicode coverage check across all visible text
+  const sellerText = Object.values(parties.seller).join(' ');
+  const buyerText  = Object.values(parties.buyer).join(' ');
+  const itemText   = meaningful.flatMap(function(i) { return [i.description, i.reference]; }).join(' ');
+  if (hasUnsupportedChars(sellerText + ' ' + buyerText + ' ' + itemText)) {
+    errors.push('Some characters are outside the embedded font range (Latin + Latin Extended-A). Remove or transliterate them.');
+  }
+
+  const seen = new Set();
+  const unique = errors.filter(function(e) {
+    if (seen.has(e)) return false;
+    seen.add(e);
+    return true;
+  });
+  return { errors: unique, items: meaningful, parties: parties };
+}
+
+// ============================================================
+// PDF cursor
+// ============================================================
+function createCursor(doc) {
+  return {
+    y: LAYOUT.TOP_MARGIN,
+    moveTo: function(y) { this.y = y; },
+    advance: function(dy) { this.y += dy; },
+    ensureSpace: function(needed) {
+      if (this.y + needed > LAYOUT.BOTTOM_LIMIT) {
+        doc.addPage();
+        this.y = LAYOUT.TOP_MARGIN;
+        return true;
+      }
+      return false;
+    },
+  };
+}
+
+function setColor(doc, rgb) { doc.setTextColor(rgb[0], rgb[1], rgb[2]); }
+function setDraw(doc, rgb)  { doc.setDrawColor(rgb[0], rgb[1], rgb[2]); }
+
+function drawTextLines(doc, x, y, lines, lineHeight) {
+  for (const line of lines) {
+    if (!line) continue;
+    doc.text(line, x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+
+// ============================================================
+// PDF sections
+// ============================================================
+function drawHeader(doc, cursor, info) {
+  cursor.moveTo(86);
+  const titleY = cursor.y;
+
+  // Title
+  doc.setFontSize(24);
+  setColor(doc, PDF_COLORS.TEXT);
+  doc.text('INVOICE', LAYOUT.LEFT, titleY);
+
+  // Left column: seller info (variable height)
+  let leftY = titleY + 38;
+  const s = info.seller;
+
+  doc.setFontSize(12);
+  setColor(doc, PDF_COLORS.TEXT);
+  doc.text(s.org || s.name || '', LAYOUT.LEFT, leftY);
+  leftY += 17;
+
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  const sellerLines = [s.contact, s.addr1, s.addr2, s.email, s.phone].filter(Boolean);
+  leftY = drawTextLines(doc, LAYOUT.LEFT, leftY, sellerLines, LAYOUT.LINE_HEIGHT_BODY);
+
+  if (s.taxId) {
+    leftY += 2;
+    doc.setFontSize(9);
+    setColor(doc, PDF_COLORS.MUTED);
+    const taxLabel = (info.mode === MODE_VENDOR_TO_PTA) ? 'Tax ID: ' : 'EIN: ';
+    doc.text(taxLabel + s.taxId, LAYOUT.LEFT, leftY);
+    leftY += LAYOUT.LINE_HEIGHT_BODY;
+  }
+
+  // Right column: invoice meta (fixed height)
+  let rightY = titleY;
+  doc.setFontSize(9);
+  setColor(doc, PDF_COLORS.MUTED);
+  doc.text('Invoice Number', LAYOUT.RIGHT, rightY, { align: 'right' });
+  rightY += 14;
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  doc.text(info.invoiceNumber, LAYOUT.RIGHT, rightY, { align: 'right' });
+  rightY += 22;
+
+  doc.setFontSize(9);
+  setColor(doc, PDF_COLORS.MUTED);
+  doc.text('Invoice Date', LAYOUT.RIGHT, rightY, { align: 'right' });
+  rightY += 14;
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  doc.text(info.invoiceDateLong, LAYOUT.RIGHT, rightY, { align: 'right' });
+  rightY += 8;
+
+  cursor.moveTo(Math.max(leftY, rightY) + 20);
+}
+
+function drawBillTo(doc, cursor, buyer, mode) {
+  cursor.ensureSpace(90);
+  doc.setFontSize(9);
+  setColor(doc, PDF_COLORS.MUTED);
+  doc.text('BILL TO', LAYOUT.LEFT, cursor.y);
+  cursor.advance(16);
+
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  const lines = [buyer.name, buyer.org, buyer.addr1, buyer.addr2, buyer.email].filter(Boolean);
+  cursor.y = drawTextLines(doc, LAYOUT.LEFT, cursor.y, lines, LAYOUT.LINE_HEIGHT_BODY);
+
+  if (buyer.taxId) {
+    cursor.advance(2);
+    doc.setFontSize(9);
+    setColor(doc, PDF_COLORS.MUTED);
+    const label = (mode === MODE_VENDOR_TO_PTA) ? 'EIN: ' : 'Tax ID: ';
+    doc.text(label + buyer.taxId, LAYOUT.LEFT, cursor.y);
+    cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+  }
+
+  cursor.advance(16);
+}
+
+function drawItemsHeader(doc, cursor) {
+  doc.setFontSize(9);
+  setColor(doc, PDF_COLORS.MUTED);
+  doc.text('DESCRIPTION', LAYOUT.LEFT, cursor.y);
+  doc.text('AMOUNT', LAYOUT.RIGHT, cursor.y, { align: 'right' });
+  cursor.advance(6);
+  setDraw(doc, PDF_COLORS.RULE_STRONG);
+  doc.setLineWidth(0.75);
+  doc.line(LAYOUT.LEFT, cursor.y, LAYOUT.RIGHT, cursor.y);
+  cursor.advance(16);
+}
+
+function drawItem(doc, cursor, item) {
+  doc.setFontSize(10);
+  const descLines = doc.splitTextToSize(item.description, LAYOUT.MAX_DESC_WIDTH);
+  let refLines = [];
+  if (item.reference) {
+    doc.setFontSize(9);
+    refLines = doc.splitTextToSize(item.reference, LAYOUT.MAX_DESC_WIDTH);
+  }
+  const needed =
+    descLines.length * LAYOUT.LINE_HEIGHT_DESC +
+    refLines.length  * LAYOUT.LINE_HEIGHT_REF + 8 + 16;
+
+  const broke = cursor.ensureSpace(needed);
+  if (broke) drawItemsHeader(doc, cursor);
+
+  const amountY = cursor.y;
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  for (const l of descLines) { doc.text(l, LAYOUT.LEFT, cursor.y); cursor.advance(LAYOUT.LINE_HEIGHT_DESC); }
+  if (refLines.length) {
+    doc.setFontSize(9);
+    setColor(doc, PDF_COLORS.MUTED);
+    for (const l of refLines) { doc.text(l, LAYOUT.LEFT, cursor.y); cursor.advance(LAYOUT.LINE_HEIGHT_REF); }
+  }
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  doc.text(formatCents(item.amountCents), LAYOUT.RIGHT, amountY, { align: 'right' });
+
+  cursor.advance(8);
+  setDraw(doc, PDF_COLORS.RULE_LIGHT);
+  doc.setLineWidth(0.5);
+  doc.line(LAYOUT.LEFT, cursor.y, LAYOUT.RIGHT, cursor.y);
+  cursor.advance(16);
+}
+
+function drawTotal(doc, cursor, totalCents) {
+  cursor.ensureSpace(30);
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  doc.text('Total Due', LAYOUT.LEFT, cursor.y);
+  doc.text(formatCents(totalCents), LAYOUT.RIGHT, cursor.y, { align: 'right' });
+  cursor.advance(40);
+}
+
+function drawPaymentInstructions(doc, cursor, seller, mode) {
+  // Whoever is the seller is the one being paid; their info is the remit-to.
+  cursor.ensureSpace(160);
+  doc.setFontSize(9);
+  setColor(doc, PDF_COLORS.MUTED);
+  doc.text('PAYMENT INSTRUCTIONS', LAYOUT.LEFT, cursor.y);
+  cursor.advance(16);
+
+  doc.setFontSize(10);
+  setColor(doc, PDF_COLORS.BODY);
+  doc.text('Make check payable to:', LAYOUT.LEFT, cursor.y);
+  cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+  doc.text(seller.org || seller.name || '', LAYOUT.LEFT, cursor.y);
+  cursor.advance(LAYOUT.LINE_HEIGHT_BODY + 6);
+
+  if (seller.addr1) {
+    doc.text('Mail to:', LAYOUT.LEFT, cursor.y);
+    cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+    doc.text(seller.org || seller.name || '', LAYOUT.LEFT, cursor.y);
+    cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+    doc.text(seller.addr1, LAYOUT.LEFT, cursor.y);
+    cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+    if (seller.addr2) {
+      doc.text(seller.addr2, LAYOUT.LEFT, cursor.y);
+      cursor.advance(LAYOUT.LINE_HEIGHT_BODY);
+    }
+  }
+
+  if (mode === MODE_PTA_TO_CUSTOMER) {
+    cursor.advance(12);
+    doc.setFontSize(10);
+    setColor(doc, PDF_COLORS.BODY);
+    doc.text('Thank you for supporting the Argenziano School community.', LAYOUT.LEFT, cursor.y);
+  }
+}
+
+function drawPageNumbers(doc) {
+  const pageCount = doc.internal.getNumberOfPages();
+  if (pageCount < 2) return;
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    setColor(doc, PDF_COLORS.MUTED);
+    doc.text('Page ' + i + ' of ' + pageCount, LAYOUT.RIGHT, 772, { align: 'right' });
+  }
+}
+
+// ============================================================
+// File name
+// ============================================================
+function sanitizeForFilename(s) {
+  return String(s || '').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_').slice(0, 60) || 'Unnamed';
+}
+
+function pdfFileName(data) {
+  if (data.mode === MODE_PTA_TO_CUSTOMER) {
+    return 'Argenziano_School_PTA_Invoice_' + data.invoiceNumber + '.pdf';
+  } else {
+    const vendor = sanitizeForFilename(data.seller.org || data.seller.contact);
+    return vendor + '_Invoice_to_Argenziano_School_PTA_' + data.invoiceNumber + '.pdf';
+  }
+}
+
+// ============================================================
+// PDF build
+// ============================================================
+function buildPDFDoc(data) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error('PDF library failed to load. Check your network and refresh the page.');
+  }
+
+  const jsPDF = window.jspdf.jsPDF;
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+
+  const seller = data.seller;
+  const buyer = data.buyer;
+  const sellerName = seller.org || seller.name || 'Unknown';
+  const buyerName  = buyer.org  || buyer.name  || 'Unknown';
+
+  doc.setProperties({
+    title:    'Invoice ' + data.invoiceNumber + ' \u2014 ' + sellerName + ' to ' + buyerName,
+    subject:  'Invoice from ' + sellerName + ' to ' + buyerName,
+    author:   sellerName,
+    creator:  'Argenziano School PTA Invoice Generator',
+    keywords: 'invoice, ' + sellerName + ', ' + buyerName + ', ' + data.invoiceNumber,
+  });
+
+  doc.addFileToVFS('NotoSans-Regular.ttf', EMBEDDED_FONT_BASE64);
+  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
+  doc.setFont('NotoSans', 'normal');
+
+  const cursor = createCursor(doc);
+  drawHeader(doc, cursor, data);
+  drawBillTo(doc, cursor, data.buyer, data.mode);
+  drawItemsHeader(doc, cursor);
+  for (const item of data.items) drawItem(doc, cursor, item);
+  drawTotal(doc, cursor, data.totalCents);
+  drawPaymentInstructions(doc, cursor, data.seller, data.mode);
+  drawPageNumbers(doc);
+
+  return doc;
+}
+
+function buildPDF(data) {
+  const doc = buildPDFDoc(data);
+  doc.save(pdfFileName(data));
+}
+
+// ============================================================
+// Email (iOS / Android share sheet via Web Share API)
+// ============================================================
+function emailSubjectFor(data) {
+  const sellerName = data.seller.org || data.seller.name || 'Sender';
+  return 'Invoice ' + data.invoiceNumber + ' from ' + sellerName;
+}
+
+function emailBodyFor(data) {
+  const sellerName = data.seller.org || data.seller.name || '';
+  const total = formatCents(data.totalCents);
+  return 'Invoice ' + data.invoiceNumber
+       + '\nFrom: ' + sellerName
+       + '\nDate: ' + data.invoiceDateLong
+       + '\nTotal: ' + total
+       + '\n\nDetails attached.';
+}
+
+function shareSupportsFiles() {
+  if (typeof navigator === 'undefined' || !navigator.canShare) return false;
+  try {
+    const probe = new File(['probe'], 'probe.pdf', { type: 'application/pdf' });
+    return navigator.canShare({ files: [probe] });
+  } catch (err) {
+    return false;
+  }
+}
+
+async function emailPDF(data) {
+  // Check basic API availability
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+    throw new Error('Sharing is not available here. On iPhone, open this page in Safari directly (not inside an in-app preview), then tap Email PDF again.');
+  }
+
+  const doc = buildPDFDoc(data);
+  const blob = doc.output('blob');
+  const fileName = pdfFileName(data);
+  const file = new File([blob], fileName, { type: 'application/pdf' });
+
+  // canShare with files can return false in iframes that lack the web-share
+  // permission, even when share itself would succeed in a top-level context.
+  // We attempt the share regardless and let the OS reject it with a real error.
+  if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+    // Try without files as a fallback so the user at least gets a compose
+    // window with the subject/body filled in; they can attach the PDF manually
+    // after using Generate PDF.
+    throw new Error('This browser cannot attach files to a share. Use Generate PDF, then attach the downloaded file in your email app.');
+  }
+
+  await navigator.share({
+    title: emailSubjectFor(data),
+    text:  emailBodyFor(data),
+    files: [file],
+  });
+}
+
+// ============================================================
+// Autosave / restore
+// ============================================================
+let autosaveTimer = null;
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(saveDraft, AUTOSAVE_DEBOUNCE_MS);
+}
+
+function snapshot() {
+  return {
+    savedAt: Date.now(),
+    mode: currentMode,
+    invoiceDate: dateInput.value,
+    invoiceNumber: numberInput.value,
+    invoiceNumberManuallyEdited: invoiceNumberManuallyEdited,
+    billName:  billNameInput.value,
+    billOrg:   billOrgInput.value,
+    billEmail: billEmailInput.value,
+    vendor: {
+      org:     vendorOrgInput.value,
+      contact: vendorContactInput.value,
+      addr1:   vendorAddr1Input.value,
+      addr2:   vendorAddr2Input.value,
+      email:   vendorEmailInput.value,
+      phone:   vendorPhoneInput.value,
+      taxId:   vendorTaxIdInput.value,
+    },
+    items: readLineItems(),
+  };
+}
+
+function saveDraft() {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot()));
+  } catch (err) {
+    console.warn('Autosave failed', err);
+  }
+}
+
+function loadDraft() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== 'object') return null;
+    if (Date.now() - (data.savedAt || 0) > RESTORE_PROMPT_MAX_AGE_MS) return null;
+    return data;
+  } catch (err) {
+    return null;
+  }
+}
+
+function applyDraft(data) {
+  if (!data) return;
+  if (data.invoiceDate) dateInput.value = data.invoiceDate;
+  if (data.invoiceNumber) numberInput.value = data.invoiceNumber;
+  invoiceNumberManuallyEdited = !!data.invoiceNumberManuallyEdited;
+  billNameInput.value  = data.billName  || '';
+  billOrgInput.value   = data.billOrg   || '';
+  billEmailInput.value = data.billEmail || '';
+  const v = data.vendor || {};
+  vendorOrgInput.value     = v.org     || '';
+  vendorContactInput.value = v.contact || '';
+  vendorAddr1Input.value   = v.addr1   || '';
+  vendorAddr2Input.value   = v.addr2   || '';
+  vendorEmailInput.value   = v.email   || '';
+  vendorPhoneInput.value   = v.phone   || '';
+  vendorTaxIdInput.value   = v.taxId   || '';
+
+  lineItemsEl.replaceChildren();
+  if (Array.isArray(data.items) && data.items.length) {
+    for (const item of data.items) makeLineItem(item);
+  } else {
+    makeLineItem();
+  }
+
+  // Apply mode last (it triggers the visual swap)
+  const mode = (data.mode === MODE_VENDOR_TO_PTA) ? MODE_VENDOR_TO_PTA : MODE_PTA_TO_CUSTOMER;
+  const radio = document.querySelector('input[name="mode"][value="' + mode + '"]');
+  if (radio) radio.checked = true;
+  applyMode(mode);
+
+  updateTotal();
+}
+
+restoreBtn.addEventListener('click', function() {
+  const draft = loadDraft();
+  if (draft) applyDraft(draft);
+  restoreBar.classList.remove('show');
+  showSuccess('Draft restored.');
+});
+
+discardRestoreBtn.addEventListener('click', function() {
+  sessionStorage.removeItem(STORAGE_KEY);
+  restoreBar.classList.remove('show');
+});
+
+// ============================================================
+// Init
+// ============================================================
+(function init() {
+  dateInput.value = todayLocalISO();
+  syncInvoiceNumberFromDate();
+  makeLineItem();
+  applyMode(MODE_PTA_TO_CUSTOMER);
+
+  // Feature support for Web Share with files varies by browser/context;
+  // the button is always visible and the click handler explains clearly
+  // if the device or context (e.g., a sandboxed preview iframe) blocks it.
+
+  const draft = loadDraft();
+  const meaningful = draft && (
+    draft.billName || draft.billOrg || draft.billEmail ||
+    (draft.vendor && (draft.vendor.org || draft.vendor.contact || draft.vendor.addr1)) ||
+    (Array.isArray(draft.items) && draft.items.some(function(i) { return i.description || i.amountCents > 0; }))
+  );
+  if (meaningful) restoreBar.classList.add('show');
+})();
+
+// ============================================================
+// Build the data object from current form state
+// ============================================================
+function collectDataForOutput() {
+  const result = validateForm();
+  if (result.errors.length) {
+    return { errors: result.errors, data: null };
+  }
+  return {
+    errors: [],
+    data: {
+      mode: currentMode,
+      invoiceNumber:   numberInput.value.trim(),
+      invoiceDateLong: formatDateLong(dateInput.value),
+      seller: result.parties.seller,
+      buyer:  result.parties.buyer,
+      items:      result.items,
+      totalCents: calculateTotalCents(result.items),
+    },
+  };
+}
+
+// ============================================================
+// Submit (Generate PDF)
+// ============================================================
+form.addEventListener('submit', function(event) {
+  event.preventDefault();
+  clearStatus();
+
+  const r = collectDataForOutput();
+  if (r.errors.length) { showError(r.errors[0]); return; }
+
+  generateBtn.disabled = true;
+  const originalLabel = generateBtn.textContent;
+  generateBtn.textContent = 'Generating\u2026';
+  try {
+    buildPDF(r.data);
+    showSuccess('PDF downloaded.');
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.error('PDF generation failed', err);
+    showError(err.message || 'Could not generate the PDF.');
+  } finally {
+    generateBtn.disabled = false;
+    generateBtn.textContent = originalLabel;
+  }
+});
+
+// ============================================================
+// Email PDF (Web Share API with files)
+// ============================================================
+emailBtn.addEventListener('click', async function() {
+  clearStatus();
+
+  const r = collectDataForOutput();
+  if (r.errors.length) { showError(r.errors[0]); return; }
+
+  emailBtn.disabled = true;
+  const originalLabel = emailBtn.textContent;
+  emailBtn.textContent = 'Preparing\u2026';
+  try {
+    await emailPDF(r.data);
+    showSuccess('Share sheet opened.');
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    if (err && err.name === 'AbortError') {
+      // User dismissed the share sheet; not an error worth showing
+      return;
+    }
+    console.error('Email share failed', err);
+    showError(err.message || 'Could not open the share sheet.');
+  } finally {
+    emailBtn.disabled = false;
+    emailBtn.textContent = originalLabel;
+  }
+});
+
+// ============================================================
+// Reset
+// ============================================================
+let resetArmed = false;
+let resetTimer = null;
+const RESET_IDLE  = 'Reset form';
+const RESET_ARMED = 'Click again to confirm';
+
+resetBtn.addEventListener('click', function() {
+  if (!resetArmed) {
+    resetArmed = true;
+    resetBtn.textContent = RESET_ARMED;
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(function() {
+      resetArmed = false;
+      resetBtn.textContent = RESET_IDLE;
+    }, 3000);
+    return;
+  }
+  clearTimeout(resetTimer);
+  resetArmed = false;
+  resetBtn.textContent = RESET_IDLE;
+
+  dateInput.value = todayLocalISO();
+  invoiceNumberManuallyEdited = false;
+  syncInvoiceNumberFromDate();
+  billNameInput.value = '';
+  billOrgInput.value = '';
+  billEmailInput.value = '';
+  for (const f of modeBFields) f.value = '';
+  lineItemsEl.replaceChildren();
+  makeLineItem();
+  // Reset mode radios to Mode A
+  document.querySelector('input[name="mode"][value="' + MODE_PTA_TO_CUSTOMER + '"]').checked = true;
+  applyMode(MODE_PTA_TO_CUSTOMER);
+  sessionStorage.removeItem(STORAGE_KEY);
+  clearStatus();
+});
+</script>
+</body>
+</html>
